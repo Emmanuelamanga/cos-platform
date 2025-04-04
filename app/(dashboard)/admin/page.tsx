@@ -20,7 +20,7 @@ export default async function AdminDashboardPage() {
   };
   
   // Initialize with empty county data
-  let countyData = [];
+  let countyData: { county: string; count: unknown; percentage: number; }[] = [];
   
   // Flag to track if we got data from the database
   let dbConnectionSuccess = false;
@@ -90,9 +90,9 @@ export default async function AdminDashboardPage() {
         const countyCount = {};
         let totalCount = 0;
         
-        casesData.forEach(item => {
-          const county = item.county || 'Unknown';
-          countyCount[county] = (countyCount[county] || 0) + 1;
+        casesData.forEach((item: { county: string | null }) => {
+          const county = item.county ?? 'Unknown';
+          countyCount[county as keyof typeof countyCount] = (countyCount[county as keyof typeof countyCount] ?? 0) + 1;
           totalCount++;
         });
         

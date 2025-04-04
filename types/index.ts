@@ -1,6 +1,7 @@
 // types/index.ts
 
-import { Database } from './supabase';
+import { Database } from "./superbase";
+
 
 // User Profile
 export type Profile = {

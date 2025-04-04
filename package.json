@@ -5,8 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:skip-type-check": "tsc --noEmit --incremental false --skipLibCheck true || next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+    "test": "npm run lint && npm run type-check"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

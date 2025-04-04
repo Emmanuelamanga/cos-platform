@@ -28,6 +28,7 @@ import {
   MapPin,
   Calendar,
   Info,
+  AlertCircle,
 } from "lucide-react";
 
 export const Icons = {
@@ -59,4 +60,5 @@ export const Icons = {
   location: MapPin,
   calendar: Calendar,
   info: Info,
+  alertCircle: AlertCircle
 };
