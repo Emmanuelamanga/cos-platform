@@ -1,7 +1,7 @@
 // app/(dashboard)/admin/layout.tsx
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { createServerClient } from "@/lib/supabase/server";
+import { getSupabaseServer } from "@/lib/supabase/server";
 import { AdminSidebar } from "@/components/dashboard/admin-sidebar";
 
 export default async function AdminDashboardLayout({
@@ -9,36 +9,37 @@ export default async function AdminDashboardLayout({
 }: {
   children: ReactNode;
 }) {
-  const supabase = createServerClient();
+  const supabase = await getSupabaseServer();
   
-  // Check if user is authenticated and is an admin
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  
-  if (!session) {
-    redirect("/sign-in");
-  }
-  
-  // Fetch user profile
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", session.user.id)
-    .single();
-  
-  if (!profile || profile.role !== "admin") {
-    redirect("/");
-  }
-  
-  return (
-    <div className="flex min-h-screen bg-background">
-      <AdminSidebar />
-      <div className="flex-1 overflow-auto">
-        <div className="container p-6 md:p-8">
+  // Authentication checks...
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) redirect("/sign-in");
+    
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+    
+    if (!profile || profile.role !== "admin") redirect("/");
+    
+    // Simple, robust layout with proper overflow handling
+    return (
+      <div className="flex h-screen">
+        {/* Sidebar - fixed width, full height, scrollable */}
+        <aside className="w-64 h-screen overflow-y-auto bg-white border-r border-gray-200 flex-shrink-0">
+          <AdminSidebar />
+        </aside>
+        
+        {/* Main content - takes remaining width, full height, scrollable */}
+        <main className="flex-1 h-screen overflow-y-auto bg-gray-50 p-6">
           {children}
-        </div>
+        </main>
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error("Error in admin layout:", error);
+    redirect("/sign-in?error=auth");
+  }
 }

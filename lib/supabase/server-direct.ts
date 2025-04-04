@@ -5,7 +5,7 @@ import type { Database } from '@/types/supabase';
 
 // This is a function to be used when you need direct access without going through the helper
 export async function getSupabaseServer() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   
   return createServerComponentClient<Database>({
     cookies: () => cookieStore,

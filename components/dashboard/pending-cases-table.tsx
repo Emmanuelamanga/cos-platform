@@ -1,19 +1,14 @@
+"use client";
 // components/dashboard/pending-cases-table.tsx
-("use client");
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/dashboard/user-cases-table";
+import { useEffect, useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button"; // Added missing import
 import { Input } from "@/components/ui/input";
 import { ChevronRight, Search } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 type Case = {
   id: string;
@@ -25,46 +20,101 @@ type Case = {
 };
 
 export function PendingCasesTable() {
-  const [cases, setCases] = useState<Case[]>([
-    {
-      id: "CAS-001",
-      case_type: "Infrastructure",
-      county: "Nairobi",
-      short_description: "Broken water pipe on Moi Avenue",
-      submitted_on: "2023-06-18",
-      reporter: "John Doe",
-    },
-    {
-      id: "CAS-002",
-      case_type: "Public Service",
-      county: "Mombasa",
-      short_description: "Garbage not collected for two weeks",
-      submitted_on: "2023-06-17",
-      reporter: "Jane Smith",
-    },
-    {
-      id: "CAS-003",
-      case_type: "Environment",
-      county: "Kisumu",
-      short_description: "Industrial waste dumping near Lake Victoria",
-      submitted_on: "2023-06-15",
-      reporter: "David Ochieng",
-    },
-    {
-      id: "CAS-004",
-      case_type: "Public Service",
-      county: "Nakuru",
-      short_description: "Street lights not working on Main Street",
-      submitted_on: "2023-06-14",
-      reporter: "Sarah Kamau",
-    },
-  ]);
+  const [cases, setCases] = useState<Case[]>([]);
+  const [filteredCases, setFilteredCases] = useState<Case[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const supabase = createClientComponentClient();
+  
+  // Fetch cases from Supabase
+  useEffect(() => {
+    async function fetchPendingCases() {
+      try {
+        setLoading(true);
+        
+        const { data, error } = await supabase
+          .from('cases')
+          .select(`
+            id,
+            case_type,
+            county,
+            short_description,
+            created_at,
+            profiles:reporter_id (
+              full_name
+            )
+          `)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        // Transform the data to match the component's expected format
+        const formattedData: Case[] = data.map(caseItem => ({
+          id: caseItem.id.substring(0, 8).toUpperCase(), // Format as CAS-XXX
+          case_type: caseItem.case_type,
+          county: caseItem.county,
+          short_description: caseItem.short_description,
+          submitted_on: new Date(caseItem.created_at).toISOString().split('T')[0],
+          reporter: caseItem.profiles.full_name
+        }));
+        
+        setCases(formattedData);
+        setFilteredCases(formattedData);
+      } catch (err) {
+        console.error('Error fetching pending cases:', err);
+        setError('Failed to load pending cases');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchPendingCases();
+  }, [supabase]);
+  
+  // Handle search
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredCases(cases);
+      return;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    const filtered = cases.filter(caseItem => 
+      caseItem.id.toLowerCase().includes(query) ||
+      caseItem.case_type.toLowerCase().includes(query) ||
+      caseItem.county.toLowerCase().includes(query) ||
+      caseItem.short_description.toLowerCase().includes(query) ||
+      caseItem.reporter.toLowerCase().includes(query)
+    );
+    
+    setFilteredCases(filtered);
+  }, [searchQuery, cases]);
+  
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  if (loading) {
+    return <div className="py-10 text-center">Loading pending cases...</div>;
+  }
+
+  if (error) {
+    return <div className="py-10 text-center text-red-500">{error}</div>;
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Search className="h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search cases..." className="h-8 w-full" />
+        <Input 
+          placeholder="Search cases..." 
+          className="h-8 w-full" 
+          value={searchQuery}
+          onChange={handleSearch}
+        />
       </div>
       <div className="rounded-md border">
         <Table>
@@ -79,8 +129,8 @@ export function PendingCasesTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {cases.length > 0 ? (
-              cases.map((caseItem) => (
+            {filteredCases.length > 0 ? (
+              filteredCases.map((caseItem) => (
                 <TableRow key={caseItem.id}>
                   <TableCell>{caseItem.id}</TableCell>
                   <TableCell>
@@ -106,7 +156,7 @@ export function PendingCasesTable() {
                   colSpan={6}
                   className="text-center py-6 text-muted-foreground"
                 >
-                  No pending cases to verify
+                  {searchQuery ? "No cases match your search" : "No pending cases to verify"}
                 </TableCell>
               </TableRow>
             )}

@@ -1,5 +1,5 @@
+'use client';
 // components/dashboard/overview-chart.tsx
-("use client");
 
 import {
   CartesianGrid,

@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileCheck, Users, Globe2, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getSupabaseClient } from "@/lib/supabase/client";
+
 
 export function CaseStats() {
   const [stats, setStats] = useState({
@@ -15,29 +17,74 @@ export function CaseStats() {
     countiesCovered: 0
   });
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
-
+  // const supabase = createClient();
+const supabase = getSupabaseClient();
+  
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // In a real implementation, fetch from Supabase
-        // For now, using mock data
+        setLoading(true);
+        
+        // Get total cases count
+        const { count: totalCases, error: totalError } = await supabase
+          .from('cases')
+          .select('*', { count: 'exact', head: true });
+          
+        if (totalError) {
+          console.error("Error fetching total cases:", totalError);
+        }
+        
+        // Get verified cases count
+        const { count: verifiedCases, error: verifiedError } = await supabase
+          .from('cases')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'verified');
+          
+        if (verifiedError) {
+          console.error("Error fetching verified cases:", verifiedError);
+        }
+        
+        // Get total users count
+        const { count: totalUsers, error: usersError } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
+          
+        if (usersError) {
+          console.error("Error fetching total users:", usersError);
+        }
+        
+        // Get unique counties count
+        const { data: countiesData, error: countiesError } = await supabase
+          .from('cases')
+          .select('county')
+          .not('county', 'is', null);
+          
+        if (countiesError) {
+          console.error("Error fetching counties:", countiesError);
+        }
+        
+        // Calculate unique counties
+        const uniqueCounties = countiesData ? 
+          new Set(countiesData.map(item => item.county).filter(Boolean)).size : 
+          0;
+        
         setStats({
-          totalCases: 1248,
-          verifiedCases: 987,
-          totalUsers: 582,
-          countiesCovered: 42
+          totalCases: totalCases || 0,
+          verifiedCases: verifiedCases || 0,
+          totalUsers: totalUsers || 0,
+          countiesCovered: uniqueCounties
         });
-        setLoading(false);
+        
       } catch (error) {
         console.error("Error fetching stats:", error);
+      } finally {
         setLoading(false);
       }
     };
-
+    
     fetchStats();
   }, [supabase]);
-
+  
   return (
     <section className="w-full py-8 md:py-12 lg:py-16 bg-background">
       <div className="container px-4 md:px-6">

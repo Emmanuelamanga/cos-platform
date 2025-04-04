@@ -1,5 +1,5 @@
-// components/dashboard/user-cases-table.tsx
 'use client';
+// components/dashboard/user-cases-table.tsx
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client'; // Updated import

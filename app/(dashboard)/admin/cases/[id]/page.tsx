@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Icons } from "@/components/ui/icons";
 import { CaseVerificationForm } from "@/components/dashboard/case-verification-form";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { createServerClient } from "@/lib/supabase/server";
+import { getSupabaseServer } from "@/lib/supabase/server";
 import { format } from "date-fns";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CaseDetailPageProps {
   params: {
@@ -18,71 +19,172 @@ interface CaseDetailPageProps {
 }
 
 export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
-  const supabase = createServerClient();
+  let caseDetail = null;
+  let errorMessage = null;
   
-  // In a real implementation, we'd fetch from Supabase
-  // For now, using mock data
-  const caseDetail = {
-    id: params.id,
-    case_type: "Infrastructure",
-    county: "Nairobi",
-    short_description: "Broken water pipe on Moi Avenue",
-    detailed_description: 
-      "There is a major water pipe burst on Moi Avenue near the junction with Tom Mboya Street. " +
-      "This has been leaking for about 3 days now, causing flooding on the road and wasting a lot of water. " +
-      "The water company should be informed to fix this urgently as it's affecting traffic and pedestrians in the area.",
-    observation_date: "2023-06-18T14:30:00Z",
-    location_details: {
-      coordinates: {
-        lat: -1.286389,
-        lng: 36.817223
-      },
-      address: "Moi Avenue, CBD, Nairobi"
-    },
-    status: "pending",
-    reporter: {
-      id: "user-123",
-      name: "John Doe",
-      phone: "+254712345678",
-      email: "john.doe@example.com"
-    },
-    evidence_files: [
-      {
-        id: "file-001",
-        filename: "broken_pipe_photo.jpg",
-        file_type: "image/jpeg",
-        file_path: "/api/placeholder/800/600",
-        uploaded_at: "2023-06-18T14:35:00Z"
-      },
-      {
-        id: "file-002",
-        filename: "location_map.jpg",
-        file_type: "image/jpeg",
-        file_path: "/api/placeholder/800/600",
-        uploaded_at: "2023-06-18T14:36:00Z"
+  try {
+    // Try to connect to Supabase
+    const supabase = await getSupabaseServer();
+    
+    if (supabase) {
+      // Attempt to fetch the basic case data
+      const { data: caseData, error: caseError } = await supabase
+        .from('cases')
+        .select('*')
+        .eq('id', params.id)
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no match
+        
+      if (caseError) {
+        console.log("Error fetching case data:", caseError.message);
+        errorMessage = `Database error: ${caseError.message}`;
+      } else if (caseData) {
+        // If case was found, fetch the related data
+        
+        // Fetch the reporter information safely
+        let reporterData = null;
+        if (caseData.reporter_id) {
+          const { data: reporter } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', caseData.reporter_id)
+            .maybeSingle();
+            
+          if (reporter) reporterData = reporter;
+        }
+        
+        // Fetch evidence files safely
+        let evidenceFiles = [];
+        const { data: files } = await supabase
+          .from('evidence_files')
+          .select('*')
+          .eq('case_id', params.id);
+          
+        if (files && files.length > 0) evidenceFiles = files;
+        
+        // Fetch verification history safely
+        let verificationHistory = [];
+        const { data: history } = await supabase
+          .from('verification_records')
+          .select('*')
+          .eq('case_id', params.id)
+          .order('created_at', { ascending: false });
+          
+        if (history && history.length > 0) {
+          // Get admin names in a separate query to avoid join issues
+          const adminIds = history.map(record => record.admin_id).filter(Boolean);
+          let adminMap = {};
+          
+          if (adminIds.length > 0) {
+            const { data: admins } = await supabase
+              .from('profiles')
+              .select('id, full_name')
+              .in('id', adminIds);
+              
+            if (admins) {
+              adminMap = admins.reduce((map, admin) => {
+                map[admin.id] = admin.full_name;
+                return map;
+              }, {});
+            }
+          }
+          
+          verificationHistory = history.map(record => ({
+            id: record.id,
+            status: record.status,
+            notes: record.verification_notes,
+            admin: adminMap[record.admin_id] || "Unknown Admin",
+            timestamp: record.created_at
+          }));
+        }
+        
+        // Construct the full case detail object with safe defaults
+        caseDetail = {
+          id: caseData.id,
+          case_type: caseData.case_type || "Unknown",
+          county: caseData.county || "Unknown",
+          short_description: caseData.short_description || "No description available",
+          detailed_description: caseData.detailed_description || "No detailed description available",
+          observation_date: caseData.observation_date || new Date().toISOString(),
+          location_details: caseData.location_details || { address: "No location details available" },
+          status: caseData.status || "pending",
+          reporter: reporterData ? {
+            id: reporterData.id,
+            name: reporterData.full_name || "Unknown",
+            phone: reporterData.phone_number || "N/A",
+            email: reporterData.email || "N/A"
+          } : {
+            id: "unknown",
+            name: "Unknown Reporter",
+            phone: "N/A",
+            email: "N/A"
+          },
+          evidence_files: evidenceFiles.map(file => ({
+            id: file.id,
+            filename: file.file_path ? file.file_path.split('/').pop() : "unknown_file.jpg",
+            file_type: file.file_type || "image/jpeg",
+            file_path: file.file_path || "/api/placeholder/800/600",
+            uploaded_at: file.created_at || new Date().toISOString()
+          })),
+          verification_history: verificationHistory,
+          created_at: caseData.created_at || new Date().toISOString(),
+          updated_at: caseData.updated_at || new Date().toISOString()
+        };
+      } else {
+        // No data found with this ID
+        errorMessage = `No case found with ID: ${params.id}`;
       }
-    ],
-    verification_history: [
-      {
-        id: "ver-001",
-        status: "pending_verification",
-        notes: "Assigned for verification",
-        admin: "System",
-        timestamp: "2023-06-18T15:00:00Z"
-      }
-    ],
-    created_at: "2023-06-18T14:40:00Z",
-    updated_at: "2023-06-18T15:00:00Z"
-  };
+    } else {
+      errorMessage = "Could not connect to the database";
+    }
+  } catch (error) {
+    console.log("Failed to fetch case data:", error);
+    errorMessage = "An error occurred while retrieving case data";
+  }
 
-  // If case not found
+  // If no case data was found, display a "not found" message
+  if (!caseDetail && !errorMessage) {
+    errorMessage = "Case not found";
+  }
+
+  // If we have an error but no data, show the error page
   if (!caseDetail) {
-    notFound();
+    return (
+      <div className="flex flex-col gap-8">
+        <DashboardHeader heading="Case Not Found">
+          <div className="flex items-center gap-2">
+            <Link href="/admin/cases">
+              <Button variant="outline">Back to Cases</Button>
+            </Link>
+          </div>
+        </DashboardHeader>
+
+        <Alert variant="destructive">
+          <AlertDescription>{errorMessage || "Case data could not be retrieved"}</AlertDescription>
+        </Alert>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Icons.warning className="h-16 w-16 text-muted-foreground mb-4" />
+              <h2 className="text-2xl font-semibold mb-2">No Case Data Available</h2>
+              <p className="text-muted-foreground mb-6">
+                The requested case could not be found or there was an error retrieving it.
+              </p>
+              <Link href="/admin/cases">
+                <Button>
+                  Browse All Cases
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col gap-8">
-      <DashboardHeader heading={`Case ${caseDetail.id}`}>
+      <DashboardHeader heading={`Case ${caseDetail.id.substring(0, 8)}`}>
         <div className="flex items-center gap-2">
           <Link href="/admin/cases">
             <Button variant="outline">Back to Cases</Button>
@@ -131,7 +233,7 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
               
               <div>
                 <h4 className="font-medium mb-2">Location Details</h4>
-                <p className="text-sm">{caseDetail.location_details.address}</p>
+                <p className="text-sm">{caseDetail.location_details?.address || "Address not provided"}</p>
                 <div className="mt-2 rounded-md border h-[200px] bg-muted flex items-center justify-center">
                   <p className="text-sm text-muted-foreground">Map would be displayed here</p>
                 </div>
@@ -139,20 +241,24 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
               
               <div>
                 <h4 className="font-medium mb-2">Evidence Files</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  {caseDetail.evidence_files.map((file) => (
-                    <div key={file.id} className="border rounded-md overflow-hidden">
-                      <img 
-                        src={file.file_path} 
-                        alt={file.filename} 
-                        className="w-full h-[150px] object-cover"
-                      />
-                      <div className="p-2 bg-muted text-xs truncate">
-                        {file.filename}
+                {caseDetail.evidence_files.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {caseDetail.evidence_files.map((file) => (
+                      <div key={file.id} className="border rounded-md overflow-hidden">
+                        <img 
+                          src={file.file_path} 
+                          alt={file.filename} 
+                          className="w-full h-[150px] object-cover"
+                        />
+                        <div className="p-2 bg-muted text-xs truncate">
+                          {file.filename}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No evidence files attached</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -199,19 +305,23 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
               <CardTitle>Verification History</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {caseDetail.verification_history.map((record, index) => (
-                  <div key={record.id} className="border-l-2 pl-4 pb-4 border-muted">
-                    <p className="text-sm font-medium capitalize">{record.status.replace('_', ' ')}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(record.timestamp), "PPP 'at' p")} by {record.admin}
-                    </p>
-                    {record.notes && (
-                      <p className="text-sm mt-1">{record.notes}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {caseDetail.verification_history.length > 0 ? (
+                <div className="space-y-4">
+                  {caseDetail.verification_history.map((record, index) => (
+                    <div key={record.id} className="border-l-2 pl-4 pb-4 border-muted">
+                      <p className="text-sm font-medium capitalize">{record.status.replace(/_/g, ' ')}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(record.timestamp), "PPP 'at' p")} by {record.admin}
+                      </p>
+                      {record.notes && (
+                        <p className="text-sm mt-1">{record.notes}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No verification history available</p>
+              )}
             </CardContent>
           </Card>
         </div>

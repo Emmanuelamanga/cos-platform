@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import { CheckCircle, XCircle, HelpCircle, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Check, X } from "lucide-react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CaseVerificationFormProps {
   caseId: string;
@@ -18,176 +18,191 @@ interface CaseVerificationFormProps {
 
 export function CaseVerificationForm({ caseId, initialStatus }: CaseVerificationFormProps) {
   const router = useRouter();
-  const [status, setStatus] = useState(initialStatus);
+  const supabase = createClientComponentClient();
+  
+  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState<"verified" | "rejected">(
+    initialStatus === "verified" || initialStatus === "rejected" 
+      ? initialStatus 
+      : "verified"
+  );
   const [notes, setNotes] = useState("");
-  const [contactMethod, setContactMethod] = useState<string>("none");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const supabase = createClient();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  const [contactMethod, setContactMethod] = useState<"phone" | "email" | "none">("none");
+  const [alert, setAlert] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  
+  // Disable the form if the case is already verified or rejected
+  const isDisabled = initialStatus === "verified" || initialStatus === "rejected";
+  
+  const handleSubmit = async () => {
+    if (isDisabled) return;
+    
     try {
-      // In a real implementation, send to Supabase
-      // For now, just simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Update UI optimistically
+      setSubmitting(true);
+      setAlert(null);
       
-      // Refresh the page to show updated data
-      router.refresh();
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setAlert({
+          type: "error",
+          message: "You must be logged in to verify cases"
+        });
+        return;
+      }
+      
+      // Create verification record
+      const { data: verificationRecord, error: verificationError } = await supabase
+        .from('verification_records')
+        .insert({
+          case_id: caseId,
+          admin_id: user.id,
+          verification_notes: notes,
+          contact_method: contactMethod,
+          status: status
+        })
+        .select('id')
+        .single();
+        
+      if (verificationError) {
+        throw verificationError;
+      }
+      
+      // Update case status
+      const { error: caseError } = await supabase
+        .from('cases')
+        .update({ status: status, updated_at: new Date().toISOString() })
+        .eq('id', caseId);
+        
+      if (caseError) {
+        throw caseError;
+      }
+      
+      setAlert({
+        type: "success",
+        message: `The case has been marked as ${status}`
+      });
+      
+      // Refresh the page to show the updated status
+      setTimeout(() => {
+        router.refresh();
+      }, 1500);
+      
     } catch (error) {
-      console.error("Error updating case:", error);
+      console.error("Error verifying case:", error);
+      setAlert({
+        type: "error",
+        message: "There was an error processing your verification. Please try again."
+      });
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
-
+  
   return (
     <Card>
-      <form onSubmit={handleSubmit}>
-        <CardHeader>
-          <CardTitle>Verify Case</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Verification Status</Label>
-            <RadioGroup
-              value={status}
-              onValueChange={setStatus}
-              className="grid grid-cols-1 gap-2"
-            >
-              <Label
-                htmlFor="status-pending"
-                className={cn(
-                  "flex items-center gap-2 rounded-md border p-3 cursor-pointer hover:bg-muted",
-                  status === "pending_verification" && "border-primary"
-                )}
-              >
-                <RadioGroupItem value="pending_verification" id="status-pending" />
-                <HelpCircle className="h-4 w-4 text-yellow-500" />
-                <div>
-                  <p className="font-medium">Pending Verification</p>
-                  <p className="text-xs text-muted-foreground">Case requires more investigation</p>
-                </div>
-              </Label>
-              <Label
-                htmlFor="status-more-info"
-                className={cn(
-                  "flex items-center gap-2 rounded-md border p-3 cursor-pointer hover:bg-muted",
-                  status === "more_information" && "border-primary"
-                )}
-              >
-                <RadioGroupItem value="more_information" id="status-more-info" />
-                <AlertCircle className="h-4 w-4 text-blue-500" />
-                <div>
-                  <p className="font-medium">More Information Required</p>
-                  <p className="text-xs text-muted-foreground">Need to contact reporter for details</p>
-                </div>
-              </Label>
-              <Label
-                htmlFor="status-verified"
-                className={cn(
-                  "flex items-center gap-2 rounded-md border p-3 cursor-pointer hover:bg-muted",
-                  status === "verified" && "border-primary"
-                )}
-              >
-                <RadioGroupItem value="verified" id="status-verified" />
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <div>
-                  <p className="font-medium">Verified</p>
-                  <p className="text-xs text-muted-foreground">Case confirmed as authentic</p>
-                </div>
-              </Label>
-              <Label
-                htmlFor="status-rejected"
-                className={cn(
-                  "flex items-center gap-2 rounded-md border p-3 cursor-pointer hover:bg-muted",
-                  status === "rejected" && "border-primary"
-                )}
-              >
-                <RadioGroupItem value="rejected" id="status-rejected" />
-                <XCircle className="h-4 w-4 text-red-500" />
-                <div>
-                  <p className="font-medium">Rejected</p>
-                  <p className="text-xs text-muted-foreground">Case deemed inauthentic or invalid</p>
-                </div>
-              </Label>
-            </RadioGroup>
+      <CardHeader>
+        <CardTitle>Verify Case</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {alert && (
+          <Alert variant={alert.type === "success" ? "default" : "destructive"}>
+            <AlertDescription>{alert.message}</AlertDescription>
+          </Alert>
+        )}
+        
+        {isDisabled ? (
+          <div className="rounded-md bg-muted p-3 text-sm">
+            This case has already been {initialStatus} and cannot be modified.
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="contact-method">Contact Method</Label>
-            <RadioGroup
-              value={contactMethod}
-              onValueChange={setContactMethod}
-              className="grid grid-cols-2 gap-2"
-            >
-              <Label
-                htmlFor="contact-none"
-                className={cn(
-                  "flex items-center justify-center gap-2 rounded-md border p-3 cursor-pointer hover:bg-muted",
-                  contactMethod === "none" && "border-primary"
-                )}
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Label>Verification Status</Label>
+              <RadioGroup 
+                value={status} 
+                onValueChange={(value) => setStatus(value as "verified" | "rejected")}
+                className="flex flex-col gap-2"
               >
-                <RadioGroupItem value="none" id="contact-none" />
-                <span>None</span>
-              </Label>
-              <Label
-                htmlFor="contact-phone"
-                className={cn(
-                  "flex items-center justify-center gap-2 rounded-md border p-3 cursor-pointer hover:bg-muted",
-                  contactMethod === "phone" && "border-primary"
-                )}
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="verified" id="verified" />
+                  <Label htmlFor="verified" className="flex items-center cursor-pointer">
+                    <Check className="h-4 w-4 mr-2 text-green-600" />
+                    Verify Case
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="rejected" id="rejected" />
+                  <Label htmlFor="rejected" className="flex items-center cursor-pointer">
+                    <X className="h-4 w-4 mr-2 text-red-600" />
+                    Reject Case
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="notes">Verification Notes</Label>
+              <Textarea 
+                id="notes" 
+                placeholder="Enter verification details or rejection reason"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={4}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Contact Method Used</Label>
+              <RadioGroup 
+                value={contactMethod} 
+                onValueChange={(value) => setContactMethod(value as "phone" | "email" | "none")}
+                className="flex flex-col gap-2"
               >
-                <RadioGroupItem value="phone" id="contact-phone" />
-                <span>Phone</span>
-              </Label>
-              <Label
-                htmlFor="contact-email"
-                className={cn(
-                  "flex items-center justify-center gap-2 rounded-md border p-3 cursor-pointer hover:bg-muted",
-                  contactMethod === "email" && "border-primary"
-                )}
-              >
-                <RadioGroupItem value="email" id="contact-email" />
-                <span>Email</span>
-              </Label>
-              <Label
-                htmlFor="contact-both"
-                className={cn(
-                  "flex items-center justify-center gap-2 rounded-md border p-3 cursor-pointer hover:bg-muted",
-                  contactMethod === "both" && "border-primary"
-                )}
-              >
-                <RadioGroupItem value="both" id="contact-both" />
-                <span>Both</span>
-              </Label>
-            </RadioGroup>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="verification-notes">Verification Notes</Label>
-            <Textarea
-              id="verification-notes"
-              placeholder="Add any notes about the verification process"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={4}
-            />
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Updating..." : "Update Case Status"}
-          </Button>
-        </CardFooter>
-      </form>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="phone" id="phone" />
+                  <Label htmlFor="phone" className="cursor-pointer">Phone Call</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="email" id="email" />
+                  <Label htmlFor="email" className="cursor-pointer">Email</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="none" id="none" />
+                  <Label htmlFor="none" className="cursor-pointer">No Contact Made</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </>
+        )}
+      </CardContent>
+      <CardFooter>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isDisabled || submitting || notes.trim().length === 0}
+          className="w-full"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing
+            </>
+          ) : status === "verified" ? (
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Verify Case
+            </>
+          ) : (
+            <>
+              <X className="mr-2 h-4 w-4" />
+              Reject Case
+            </>
+          )}
+        </Button>
+      </CardFooter>
     </Card>
   );
 }

@@ -7,45 +7,12 @@ import { HeroSection } from "@/components/landing/hero-section";
 import { FeatureSection } from "@/components/landing/feature-section";
 import { Footer } from "@/components/landing/footer";
 import { LangSwitcher } from "@/components/landing/lang-switcher";
+import { MainLayout } from "@/components/layout/main-layout";
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between py-4">
-          <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="font-bold text-2xl">COS</span>
-            </Link>
-            <nav className="hidden md:flex gap-6 ml-6">
-              <Link href="/about" className="text-sm font-medium hover:underline underline-offset-4">
-                About
-              </Link>
-              <Link href="/cases" className="text-sm font-medium hover:underline underline-offset-4">
-                Browse Cases
-              </Link>
-              <Link href="/contact" className="text-sm font-medium hover:underline underline-offset-4">
-                Contact
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <LangSwitcher />
-            <Link href="/sign-in" passHref>
-              <Button variant="outline" size="sm">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/sign-up" passHref>
-              <Button size="sm">
-                Register
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-      <main className="flex-1">
-        <HeroSection />
+    <MainLayout>
+      <HeroSection />
         <CaseStats />
         <section className="container py-12 md:py-24 lg:py-32">
           <div className="mx-auto grid items-center gap-6 md:max-w-6xl md:grid-cols-2 md:gap-12">
@@ -135,8 +102,6 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
-      </main>
-      <Footer />
-    </div>
+    </MainLayout>
   );
 }
