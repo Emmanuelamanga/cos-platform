@@ -104,7 +104,8 @@ export function FileUploader({
   const getFileIcon = (file: File) => {
     const fileType = file.type;
     if (fileType.startsWith('image/')) {
-      return <Image className="h-4 w-4" alt="image"/>;
+      return <Image className="h-4 w-4" alt="image" width={10}
+      height={10}/>;
     } else if (fileType.startsWith('video/')) {
       return <Film className="h-4 w-4" />;
     } else {

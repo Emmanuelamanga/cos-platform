@@ -156,21 +156,26 @@ export default function AboutPage() {
               <div className="grid gap-6 md:grid-cols-3 mt-8">
                 <div className="flex flex-col items-center space-y-2">
                   <div className="h-24 w-24 rounded-full bg-background overflow-hidden">
-                    <Image src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
+                    <Image 
+                    width={150}
+                    height={150}
+                    src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
                   </div>
                   <h3 className="font-bold">Sarah Kamau</h3>
                   <p className="text-sm text-muted-foreground text-center">Executive Director</p>
                 </div>
                 <div className="flex flex-col items-center space-y-2">
                   <div className="h-24 w-24 rounded-full bg-background overflow-hidden">
-                    <Image src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
+                    <Image width={150}
+                    height={150} src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
                   </div>
                   <h3 className="font-bold">Daniel Ochieng</h3>
                   <p className="text-sm text-muted-foreground text-center">Technical Lead</p>
                 </div>
                 <div className="flex flex-col items-center space-y-2">
                   <div className="h-24 w-24 rounded-full bg-background overflow-hidden">
-                    <Image src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
+                    <Image width={150}
+                    height={150} src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
                   </div>
                   <h3 className="font-bold">Amina Hassan</h3>
                   <p className="text-sm text-muted-foreground text-center">Verification Manager</p>

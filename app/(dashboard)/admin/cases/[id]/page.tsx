@@ -12,13 +12,13 @@ import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Image from "next/image";
 
-interface CaseDetailPageProps {
-  params: {
-    id: string;
-  };
+// Correct type definition for Next.js page props
+interface PageProps {
+  params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
+export default async function CaseDetailPage({ params }: PageProps) {
   let caseDetail = null;
   let errorMessage = null;
   
@@ -248,6 +248,8 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
                         <Image 
                           src={file.file_path} 
                           alt={file.filename} 
+                          width={400}
+                          height={300}
                           className="w-full h-[150px] object-cover"
                         />
                         <div className="p-2 bg-muted text-xs truncate">
