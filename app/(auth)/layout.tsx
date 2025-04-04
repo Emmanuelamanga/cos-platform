@@ -1,6 +1,5 @@
 // app/(auth)/layout.tsx
 import Link from "next/link";
-import { Icons } from "@/components/ui/icons";
 
 interface AuthLayoutProps {
   children: React.ReactNode;

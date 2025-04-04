@@ -120,7 +120,7 @@ export function UserCasesTable({ userId }: UserCasesTableProps) {
   if (cases.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground mb-4">You haven't submitted any cases yet.</p>
+        <p className="text-muted-foreground mb-4">You haven&apos;t submitted any cases yet.</p>
         <Link href="/submit-case">
           <Button>Submit Your First Case</Button>
         </Link>

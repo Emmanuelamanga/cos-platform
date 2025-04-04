@@ -138,7 +138,7 @@ export default async function CasesPage({
         </div>
       </MainLayout>
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in cases page:", error);
     
     // Return a fallback UI for error cases

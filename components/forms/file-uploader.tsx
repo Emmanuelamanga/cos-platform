@@ -3,7 +3,6 @@
 
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Icons } from "@/components/ui/icons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { UploadCloud, X, FileText, Image, Film } from "lucide-react";
@@ -105,7 +104,7 @@ export function FileUploader({
   const getFileIcon = (file: File) => {
     const fileType = file.type;
     if (fileType.startsWith('image/')) {
-      return <Image className="h-4 w-4" />;
+      return <Image className="h-4 w-4" alt="image"/>;
     } else if (fileType.startsWith('video/')) {
       return <Film className="h-4 w-4" />;
     } else {

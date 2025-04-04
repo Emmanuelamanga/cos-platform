@@ -1,6 +1,5 @@
 // app/(dashboard)/admin/cases/[id]/page.tsx
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -11,6 +10,7 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import Image from "next/image";
 
 interface CaseDetailPageProps {
   params: {
@@ -245,7 +245,7 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
                   <div className="grid grid-cols-2 gap-4">
                     {caseDetail.evidence_files.map((file) => (
                       <div key={file.id} className="border rounded-md overflow-hidden">
-                        <img 
+                        <Image 
                           src={file.file_path} 
                           alt={file.filename} 
                           className="w-full h-[150px] object-cover"
@@ -307,7 +307,7 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
             <CardContent>
               {caseDetail.verification_history.length > 0 ? (
                 <div className="space-y-4">
-                  {caseDetail.verification_history.map((record, index) => (
+                  {caseDetail.verification_history.map((record) => (
                     <div key={record.id} className="border-l-2 pl-4 pb-4 border-muted">
                       <p className="text-sm font-medium capitalize">{record.status.replace(/_/g, ' ')}</p>
                       <p className="text-xs text-muted-foreground">

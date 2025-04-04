@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import {
   Form,
   FormControl,
@@ -64,7 +64,7 @@ export function PublicCasesFilter({
 
   // Create a function that will create the URL with the updated params
   const createQueryString = useCallback(
-    (values: any) => {
+    (values) => {
       const params = new URLSearchParams(searchParams.toString());
       
       // Update or remove each parameter based on form values

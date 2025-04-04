@@ -1,6 +1,7 @@
 // components/landing/hero-section.tsx
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export function HeroSection() {
   return (
@@ -31,7 +32,7 @@ export function HeroSection() {
           </div>
           <div className="mx-auto lg:ml-auto">
             <div className="aspect-video overflow-hidden rounded-xl bg-background shadow-lg">
-              <img 
+              <Image 
                 src="/truth-concept-composition-detective-desk.jpg" 
                 alt="Citizens collaborating to report cases" 
                 className="object-cover w-full h-full"

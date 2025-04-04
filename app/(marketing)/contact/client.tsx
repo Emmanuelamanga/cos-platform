@@ -53,6 +53,7 @@ export default function ContactPageClient() {
       setSubject("");
       setMessage("");
     } catch (error) {
+      console.log(error);
       setError("There was an error sending your message. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -69,7 +70,7 @@ export default function ContactPageClient() {
                 Contact Us
               </h1>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-                Have questions, feedback, or need assistance? We're here to
+                Have questions, feedback, or need assistance? We&apos;re here to
                 help.
               </p>
             </div>
@@ -135,7 +136,7 @@ export default function ContactPageClient() {
                   <CardHeader>
                     <CardTitle>Contact Form</CardTitle>
                     <CardDescription>
-                      Send us a message and we'll respond as soon as possible
+                      Send us a message and we&apos;ll respond as soon as possible
                     </CardDescription>
                   </CardHeader>
                   <form onSubmit={handleSubmit}>
@@ -154,7 +155,7 @@ export default function ContactPageClient() {
                             Message Sent
                           </AlertTitle>
                           <AlertDescription className="text-green-700">
-                            Thank you for your message. We'll get back to you
+                            Thank you for your message. We&apos;ll get back to you
                             shortly.
                           </AlertDescription>
                         </Alert>

@@ -29,6 +29,9 @@ import { FileUploader } from "@/components/forms/file-uploader";
 import Link from "next/link";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { createClient } from "@/lib/supabase/client";
+import { redirect } from 'next/navigation';
+import { MapLocationSelector } from "@/components/forms/map-location-selector";
+
 
 type CaseType = {
   id: string; // Changed from number to string for UUID
@@ -47,13 +50,13 @@ type Profile = {
   email: string;
   phone_number?: string;
   county?: string;
-  [key: string]: any;
+  [key: string]: string | undefined;
 };
 
 type User = {
   id: string;
   email: string;
-  [key: string]: any;
+  [key: string] : string | undefined;
 };
 
 interface SubmitCaseClientProps {
@@ -90,6 +93,12 @@ export default function SubmitCaseClient({
   } | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [contactConsent, setContactConsent] = useState<boolean>(false);
+
+  // user 
+  if (!user) {
+    console.error("User not found");
+    return redirect('/sign-in');
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,6 +138,12 @@ export default function SubmitCaseClient({
 
     if (!locationAddress) {
       setError("Please enter a location address");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!locationCoordinates) {
+      setError("Please select a location on the map");
       setIsSubmitting(false);
       return;
     }
@@ -214,7 +229,7 @@ export default function SubmitCaseClient({
         router.push("/profile");
         router.refresh(); // Refresh the page data to show the new case
       }, 2000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Submission error:', err);
       setError(err.message || "There was an error submitting your case");
     } finally {
@@ -358,26 +373,12 @@ export default function SubmitCaseClient({
 
                   <div>
                     <h3 className="font-medium mb-2">Location Details</h3>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="location-address">
-                          Address / Description
-                        </Label>
-                        <Input
-                          id="location-address"
-                          placeholder="E.g., Road name, landmark, area"
-                          value={locationAddress}
-                          onChange={(e) => setLocationAddress(e.target.value)}
-                          required
-                        />
-                      </div>
-
-                      <div className="rounded-md border h-[200px] bg-muted flex items-center justify-center">
-                        <p className="text-sm text-muted-foreground">
-                          Map would be displayed here to select location
-                        </p>
-                      </div>
-                    </div>
+                    <MapLocationSelector
+                      locationAddress={locationAddress}
+                      setLocationAddress={setLocationAddress}
+                      locationCoordinates={locationCoordinates}
+                      setLocationCoordinates={setLocationCoordinates}
+                    />
                   </div>
 
                   <Separator />

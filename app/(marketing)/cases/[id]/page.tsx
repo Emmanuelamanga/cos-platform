@@ -5,9 +5,8 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
-import { ArrowLeft, Calendar, MapPin, User } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 type Props = {

@@ -2,9 +2,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileCheck, Users, Globe2, MapPin } from "lucide-react";
+import { FileCheck, Users, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSupabaseClient } from "@/lib/supabase/client";
 

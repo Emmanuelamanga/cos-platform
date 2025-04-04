@@ -2,10 +2,11 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Footer } from "@/components/landing/footer";
 import { MainLayout } from "@/components/layout/main-layout";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "About | Citizen Observatory System",
@@ -155,21 +156,21 @@ export default function AboutPage() {
               <div className="grid gap-6 md:grid-cols-3 mt-8">
                 <div className="flex flex-col items-center space-y-2">
                   <div className="h-24 w-24 rounded-full bg-background overflow-hidden">
-                    <img src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
+                    <Image src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
                   </div>
                   <h3 className="font-bold">Sarah Kamau</h3>
                   <p className="text-sm text-muted-foreground text-center">Executive Director</p>
                 </div>
                 <div className="flex flex-col items-center space-y-2">
                   <div className="h-24 w-24 rounded-full bg-background overflow-hidden">
-                    <img src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
+                    <Image src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
                   </div>
                   <h3 className="font-bold">Daniel Ochieng</h3>
                   <p className="text-sm text-muted-foreground text-center">Technical Lead</p>
                 </div>
                 <div className="flex flex-col items-center space-y-2">
                   <div className="h-24 w-24 rounded-full bg-background overflow-hidden">
-                    <img src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
+                    <Image src="/api/placeholder/150/150" alt="Team member" className="object-cover w-full h-full" />
                   </div>
                   <h3 className="font-bold">Amina Hassan</h3>
                   <p className="text-sm text-muted-foreground text-center">Verification Manager</p>

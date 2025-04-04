@@ -91,7 +91,7 @@ export default function SignUpPage() {
         // Redirect to verification page or dashboard
         router.push("/sign-up/verification");
       }
-    } catch (error: any) {
+    } catch (error) {
       setError(error.message || "An error occurred during sign up");
     } finally {
       setIsLoading(false);

@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Footer } from "../landing/footer";
+import { LangSwitcher } from "@/components/landing/lang-switcher";
+
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -38,6 +40,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </nav>
           </div>
           <div className="flex items-center gap-4">
+            <LangSwitcher />
             <Link href="/sign-in" passHref>
               <Button variant="outline" size="sm">
                 Sign In

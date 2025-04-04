@@ -41,6 +41,9 @@ export function RecentVerificationsTable() {
           console.warn('Error checking verification_records table:', tableError);
           throw new Error(`Table error: ${tableError.message}`);
         }
+
+        console.log("Table info:", tableInfo);
+        
         
         // Query verification records along with related case information
         const { data, error } = await supabase

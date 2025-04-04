@@ -10,6 +10,7 @@ import { UserNotifications } from '@/components/dashboard/user-notifications';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import Link from 'next/link';
 import { UserNav } from '@/components/dashboard/user-nav';
+import { Profile } from '@/types';
 
 export default async function ProfilePage() {
   // Use the new function name
@@ -126,7 +127,7 @@ function StatCard({ title, value }: { title: string; value: number }) {
 }
 
 // Helper component for profile tabs
-function ProfileTabs({ profile, email }: { profile: any; email: string }) {
+function ProfileTabs({ profile, email }: { profile: Profile; email: string }) {
   return (
     <Tabs defaultValue="cases" className="space-y-4">
       <TabsList>
@@ -178,7 +179,7 @@ function ProfileTabs({ profile, email }: { profile: any; email: string }) {
 }
 
 // Helper component for account settings
-function AccountSettingsCard({ profile, email }: { profile: any; email: string }) {
+function AccountSettingsCard({ profile, email }: { profile: Profile; email: string }) {
   return (
     <Card>
       <CardHeader>

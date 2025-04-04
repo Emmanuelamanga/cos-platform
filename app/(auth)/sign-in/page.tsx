@@ -46,7 +46,7 @@ export default function SignInPage() {
       // If sign in is successful, redirect to dashboard
       router.push("/profile");
       router.refresh();
-    } catch (error: any) {
+    } catch (error) {
       setError(error.message || "An error occurred during sign in");
     } finally {
       setIsLoading(false);

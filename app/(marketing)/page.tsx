@@ -5,8 +5,6 @@ import { RecentCases } from "@/components/landing/recent-cases";
 import { CaseStats } from "@/components/landing/case-stats";
 import { HeroSection } from "@/components/landing/hero-section";
 import { FeatureSection } from "@/components/landing/feature-section";
-import { Footer } from "@/components/landing/footer";
-import { LangSwitcher } from "@/components/landing/lang-switcher";
 import { MainLayout } from "@/components/layout/main-layout";
 
 export default function HomePage() {

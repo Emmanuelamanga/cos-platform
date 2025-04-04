@@ -14,7 +14,7 @@ export default function UnauthorizedPage() {
         <h1 className="mb-2 text-3xl font-bold tracking-tight">Unauthorized Access</h1>
         
         <p className="mb-6 text-muted-foreground">
-          You don't have permission to access this page. If you believe this is an error, please contact your administrator.
+          You don&apos;t have permission to access this page. If you believe this is an error, please contact your administrator.
         </p>
         
         <div className="flex flex-col gap-4 sm:flex-row">

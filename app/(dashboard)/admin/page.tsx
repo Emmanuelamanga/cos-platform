@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default async function AdminDashboardPage() {
   // Initialize metrics with zeros
-  let metrics = {
+  const metrics = {
     total_cases: 0,
     pending_verification: 0,
     verified_cases: 0,

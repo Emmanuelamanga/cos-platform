@@ -71,6 +71,9 @@ export function CaseVerificationForm({ caseId, initialStatus }: CaseVerification
         throw verificationError;
       }
       
+    console.log(verificationRecord);
+      
+      
       // Update case status
       const { error: caseError } = await supabase
         .from('cases')
